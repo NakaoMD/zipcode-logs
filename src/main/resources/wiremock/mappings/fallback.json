@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/address/.*"
+  },
+  "response": {
+    "status": 404,
+    "jsonBody": {
+      "error": "CEP não encontrado"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

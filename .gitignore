@@ -1,0 +1,57 @@
+# Java e Maven
+*.class
+*.log
+*.ctxt
+*.jar
+*.war
+*.ear
+*.iml
+target/
+dependency-reduced-pom.xml
+releases/
+dependency/
+*.DS_Store
+*.project
+*.classpath
+.mvn/
+.settings/
+.idea/
+*.tmp
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+*.swp
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Sistema Operacional
+Thumbs.db
+.DS_Store
+
+# Arquivos de build gerados pelo Maven Wrapper
+!mvnw
+!mvnw.cmd
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs e arquivos temporários
+logs/
+*.log
+*.tmp
+hs_err_pid*
+!README.md
+*.bak
+*.old
+
+# Docker
+*.env
+docker-compose.override.yml
+
+# WireMock
+.wiremock/
