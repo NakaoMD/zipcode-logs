@@ -7,6 +7,9 @@ WORKDIR /app
 # Copia o código-fonte do projeto e o Maven Wrapper para o container
 COPY . .
 
+# Garante que o Maven Wrapper tenha permissão de execução
+RUN chmod +x mvnw
+
 # Executa o Maven Wrapper para construir o JAR, ignorando os testes
 RUN ./mvnw clean package -DskipTests
 
