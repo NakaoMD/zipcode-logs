@@ -1,7 +1,6 @@
 package com.api.services.implementations;
 
 import com.api.domain.ZipCodeLog;
-import com.api.dtos.ZipCodeResponse;
 import com.api.repositories.ZipCodeLogRepository;
 import com.api.services.interfaces.IZipCodeLogService;
 import org.springframework.stereotype.Service;

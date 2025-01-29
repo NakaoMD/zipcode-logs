@@ -14,7 +14,7 @@ A arquitetura segue os **princípios SOLID**, garantindo modularidade e facilida
 - **Docker** (Conteinerização da aplicação e serviços auxiliares)
 - **WireMock** (Simulação de API externa)
 - **OpenAPI/Swagger** (Documentação da API)
-- **Spring Dependency Injection** (Injeção de dependências)
+- **Spring Security** com JWT para autenticação
 - **JUnit/Testcontainers** (Testes automatizados)
 
 ---
@@ -24,20 +24,33 @@ A arquitetura segue os **princípios SOLID**, garantindo modularidade e facilida
 2. Salvar logs de todas as consultas realizadas.
 3. Listar todos os logs armazenados no banco.
 4. Retornar erros customizados para CEPs inexistentes.
-5. API documentada com **Swagger**.
-6. Implementação seguindo os princípios **SOLID**.
+5. Implementação de autenticação com **JWT**.
+6. API documentada com **Swagger**.
+7. Implementação seguindo os princípios **SOLID**.
 
 ---
 
 ## Endpoints da API
 
-### **Consulta de CEP**
-- **GET /zipcode/{cep}**
-    - Consulta um CEP e salva o log.
+### **Autenticação**
+- **POST /auth/login**
+    - Autentica um usuário e retorna o token JWT.
+    - **Parâmetros de entrada:** `username` e `password`
     - **Exemplo de retorno:**
       ```json
       {
-        "cep": "041813040",
+        "token": "Bearer eyJhbGciOiJIUzI1NiIs..."
+      }
+      ```
+
+### **Consulta de CEP**
+- **GET /zipcode/{cep}**
+    - Consulta um CEP e salva o log.
+    - **Autenticação JWT necessária.**
+    - **Exemplo de retorno:**
+      ```json
+      {
+        "cep": "04813040",
         "logradouro": "Rua Exemplo",
         "bairro": "Bairro Exemplo",
         "cidade": "Cidade Exemplo",
@@ -48,17 +61,18 @@ A arquitetura segue os **princípios SOLID**, garantindo modularidade e facilida
 ### **Listar Logs**
 - **GET /zipcode/logs**
     - Retorna todos os logs armazenados.
+    - **Autenticação JWT necessária.**
     - **Exemplo de retorno:**
       ```json
       [
         {
           "id": 1,
-          "cep": "041813040",
+          "cep": "04813040",
           "logradouro": "Rua Exemplo",
           "bairro": "Bairro Exemplo",
           "cidade": "Cidade Exemplo",
           "estado": "SP",
-          "timestamp": "2025-01-27T12:00:00"
+          "timestamp": "2025-01-29T12:00:00"
         }
       ]
       ```
@@ -101,42 +115,60 @@ A arquitetura segue os **princípios SOLID**, garantindo modularidade e facilida
 src/main/java
 |-- com.api
     |-- config
-    |   |-- RestTemplateConfig.java  # Configuração de beans do RestTemplate
-    |   |-- SwaggerConfig.java       # Configuração da documentação Swagger
+    |   |-- JwtAuthenticationFilter.java  # Filtro para autenticação JWT
+    |   |-- JwtUtil.java                  # Utilitário para geração e validação de tokens JWT
+    |   |-- RestTemplateConfig.java       # Configuração de beans do RestTemplate
+    |   |-- SecurityConfig.java           # Configuração de segurança do Spring Security
+    |   |-- SwaggerConfig.java            # Configuração da documentação Swagger
     |
     |-- controllers
-    |   |-- ZipCodeController.java   # Controlador que expõe os endpoints da API
+    |   |-- AuthController.java           # Controlador responsável pela autenticação
+    |   |-- ZipCodeController.java        # Controlador que expõe os endpoints da API
     |
     |-- domain
-    |   |-- ZipCodeLog.java          # Entidade JPA que representa os logs no banco
+    |   |-- User.java                     # Entidade JPA para autenticação de usuários
+    |   |-- ZipCodeLog.java               # Entidade JPA que representa os logs no banco
     |
     |-- dtos
-    |   |-- ZipCodeResponse.java     # DTO para resposta de consulta de CEP
-    |   |-- ErrorResponse.java       # DTO para padronizar erros
+    |   |-- ZipCodeResponse.java          # DTO para resposta de consulta de CEP
+    |   |-- ErrorResponse.java            # DTO para padronizar erros
     |
     |-- exceptions
-    |   |-- GlobalExceptionHandler.java # Captura e trata erros na API
+    |   |-- GlobalExceptionHandler.java   # Captura e trata erros na API
     |
     |-- repositories
-    |   |-- ZipCodeLogRepository.java  # Interface para operações no banco de dados
+    |   |-- UserRepository.java           # Interface para operações com usuários
+    |   |-- ZipCodeLogRepository.java     # Interface para operações no banco de logs
     |
     |-- services
         |-- implementations
-            |-- ZipCodeService.java    # Implementação do serviço de busca de CEP
-            |-- ZipCodeLogService.java # Implementação do serviço de logs
+            |-- AuthService.java          # Implementação do serviço de autenticação
+            |-- ZipCodeService.java       # Implementação do serviço de busca de CEP
+            |-- ZipCodeLogService.java    # Implementação do serviço de logs
         |
         |-- interfaces
-            |-- IZipCodeService.java    # Interface para busca de CEP
-            |-- IZipCodeLogService.java # Interface para logs de CEP
+            |-- IZipCodeService.java      # Interface para busca de CEP
+            |-- IZipCodeLogService.java   # Interface para logs de CEP
 
 src/main/resources
 |-- db/migration
     |-- V1_create_zipcode_logs_table.sql  # Script para criar a tabela de logs
-|-- wiremock/mappings
-    |-- fallback.json  # Simulação de erro para CEPs inválidos
-    |-- mapping.json   # Simulação de resposta para CEPs existentes
-|-- application.properties  # Configuração do banco e API externa
+    |-- V2_create_users_table.sql         # Script para criar a tabela de usuários
+|-- application.properties                # Configuração da aplicação
+|-- wiremock/mappings                     # Simulação da API externa (WireMock)
 ```
+
+---
+
+## Configurações Importantes
+
+### **JWT (application.properties)**
+```properties
+jwt.secret=pZ+XNr8FVmYxLmxHdThnNLlI1NgAFtYWTBHZ0RAGFcU=
+jwt.expiration=86400000
+```
+
+O segredo do JWT está agora configurado no `application.properties`, garantindo flexibilidade e segurança.
 
 ---
 
@@ -150,15 +182,14 @@ Acesse a interface Swagger para visualizar e testar os endpoints da API:
 Caso tenha dúvidas ou sugestões, entre em contato:
 - **Desenvolvedor**: [Maicon Nakao]
 - **Email**: [nakao.mds@gmail.com]
-- **GitHub**: [https://github.com/NakaoMD]
+- **GitHub**: [https://github.com/NakaoMD] 
 
 ---
 
 ### **📌 Últimas Melhorias**
-✅ Implementação de **injeção de dependência via construtor**  
-✅ Uso de **interfaces** para desacoplamento dos serviços  
-✅ **GlobalExceptionHandler** para tratamento de erros centralizado  
-✅ **Testes automatizados** com JUnit e Testcontainers
+✅ Implementação de **autenticação JWT** e injeção dinâmica da chave secreta  
+✅ Uso de **injeção de dependência** via construtores  
+✅ **Tratamento centralizado de erros** com `GlobalExceptionHandler`  
+✅ **Documentação OpenAPI** atualizada com respostas de erro específicas
 
----
-
+🎉 **Projeto preparado para produção com flexibilidade e segurança!**

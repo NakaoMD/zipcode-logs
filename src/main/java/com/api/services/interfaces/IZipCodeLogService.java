@@ -4,6 +4,6 @@ import com.api.domain.ZipCodeLog;
 import java.util.List;
 
 public interface IZipCodeLogService {
-    void saveLog(ZipCodeLog log); // Usa ZipCodeLog, removendo redundância
+    void saveLog(ZipCodeLog log);
     List<ZipCodeLog> findAllLogs();
 }
