@@ -1,5 +1,9 @@
 package com.api.dtos;
 
+import com.api.domain.ZipCodeLog;
+
+import java.time.LocalDateTime;
+
 public class ZipCodeResponse {
 
     private String cep;
@@ -47,5 +51,16 @@ public class ZipCodeResponse {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public ZipCodeLog toZipCodeLog() {
+        ZipCodeLog log = new ZipCodeLog();
+        log.setCep(this.cep);
+        log.setLogradouro(this.logradouro);
+        log.setBairro(this.bairro);
+        log.setCidade(this.cidade);
+        log.setEstado(this.estado);
+        log.setTimestamp(LocalDateTime.now());
+        return log;
     }
 }
